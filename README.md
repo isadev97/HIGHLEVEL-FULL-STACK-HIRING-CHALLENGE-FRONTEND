@@ -1,5 +1,16 @@
 # HIGHLEVEL HIRING CHALLENGE (Frontend)
 
+
+## Resolving CORS Errors
+
+If you encounter CORS errors while testing the API, consider using a browser extension to bypass CORS restrictions:
+
+- For Chrome: [CORS Unblock](https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino?hl=en)
+- For Firefox: [CORS Everywhere](https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere/)
+
+These extensions can help you access resources from different origins during development.
+
+
 ```
 git clone https://github.com/isadev97/HIGHLEVEL-FULL-STACK-HIRING-CHALLENGE-FRONTEND.git
 cd HIGHLEVEL-FULL-STACK-HIRING-CHALLENGE-FRONTEND
