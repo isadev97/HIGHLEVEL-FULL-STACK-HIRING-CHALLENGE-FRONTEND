@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointment Booking System</title>
+  
+  <!-- Vue.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  <!-- Axios CDN for HTTP requests -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    #app {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      color: #333;
+    }
+
+    input, select, button {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .slots, .events {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .slot-item, .event-item {
+      background-color: #f4f4f4;
+      padding: 10px;
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .slot-item:hover {
+      background-color: #ddd;
+    }
+
+    .toggle-button {
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Appointment Booking System</h1>
+
+    <div v-if="currentPage === 'book'">
+      <h2>Book Appointment</h2>
+      
+      <label>Select Date:</label>
+      <input type="date" v-model="selectedDate" />
+
+      <label>Duration (Minutes):</label>
+      <input type="number" v-model="duration" min="1" />
+
+      <label>Select Timezone:</label>
+      <select v-model="selectedTimezone">
+        <option value="America/Los_Angeles">America/Los_Angeles</option>
+        <option value="US/Eastern">US/Eastern</option>
+        <option value="Asia/Kolkata">Asia/Kolkata (India)</option>
+        <option value="Europe/London">Europe/London</option>
+        <option value="Australia/Sydney">Australia/Sydney</option>
+      </select>
+
+      <button @click="getFreeSlots">Get Free Slots</button>
+
+      <h3>Available Time Slots</h3>
+      <ul class="slots">
+        <li class="slot-item" v-for="slot in freeSlots" :key="slot" @click="bookSlot(slot)">
+          {{ slot }}
+          <button>Book</button>
+        </li>
+      </ul>
+    </div>
+
+    <div v-if="currentPage === 'show'">
+      <h2>Show Events</h2>
+      
+      <label>Start Date:</label>
+      <input type="date" v-model="startDate" />
+      
+      <label>End Date:</label>
+      <input type="date" v-model="endDate" />
+
+      <button @click="getEvents">Get Events</button>
+
+      <h3>Events List</h3>
+      <ul class="events">
+        <li class="event-item" v-for="event in events" :key="event.startTime">
+          {{ formatEvent(event) }}
+        </li>
+      </ul>
+    </div>
+
+    <div class="toggle-button">
+      <button @click="togglePage">{{ currentPage === 'book' ? 'Switch to Show Events' : 'Switch to Book Events' }}</button>
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        currentPage: 'book',
+        selectedDate: '',
+        duration: 30,
+        selectedTimezone: 'US/Eastern',
+        freeSlots: [],
+        startDate: '',
+        endDate: '',
+        events: []
+      },
+      methods: {
+        async getFreeSlots() {
+          if (!this.selectedDate) {
+            alert('Please select a date!');
+            return;
+          }
+
+          try {
+            const response = await axios.get('http://localhost:5000/api/slots', {
+              params: {
+                date: this.selectedDate,
+                timezone: this.selectedTimezone
+              }
+            });
+            this.freeSlots = response.data;
+          } catch (error) {
+            console.error('Error fetching free slots:', error);
+          }
+        },
+
+        async bookSlot(slot) {
+          try {
+            await axios.post('http://localhost:5000/api/events', {
+              dateTime: slot,
+              duration: this.duration
+            });
+            alert('Event booked successfully!');
+            this.getFreeSlots();
+          } catch (error) {
+            console.error('Error booking event:', error);
+            alert('Failed to book the event!');
+          }
+        },
+
+        async getEvents() {
+          if (!this.startDate || !this.endDate) {
+            alert('Please select a valid date range!');
+            return;
+          }
+
+          try {
+            const response = await axios.get('http://localhost:5000/api/events', {
+              params: {
+                startDate: this.startDate,
+                endDate: this.endDate
+              }
+            });
+            this.events = response.data;
+          } catch (error) {
+            console.error('Error fetching events:', error);
+          }
+        },
+
+        formatEvent(event) {
+          if (!event.startTime || !event.duration) {
+            return 'Incomplete event data';
+          }
+          const formattedTime = new Date(event.startTime).toLocaleString();
+          return `${formattedTime} - ${event.duration} minutes`;
+        },
+
+        togglePage() {
+          this.currentPage = this.currentPage === 'book' ? 'show' : 'book';
+        }
+      }
+    });
+  </script>
+</body>
+</html>
